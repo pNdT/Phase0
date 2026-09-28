@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="phase0-token" content="__SESSION_TOKEN__">
+  <title>Phase 0 · Your idea, made buildable</title><link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<aside class="sidebar">
+  <a class="brand" href="/"><span>phase<span class="accent">0</span></span><span class="brand-label">Project planning</span></a>
+  <div class="eyebrow">WORKSPACE</div>
+  <button id="new-project" class="primary" aria-expanded="false" aria-controls="create-project">+ New project</button>
+  <form id="create-project" class="inline-panel" hidden>
+    <label for="project-title">Give your idea a name</label>
+    <input id="project-title" placeholder="My next big idea" maxlength="120" required autocomplete="off">
+    <div class="inline-actions"><button class="primary" id="create-button" type="submit">Create project</button><button id="cancel-project" class="text-button" type="button">Cancel</button></div>
+  </form>
+  <button id="project-picker" class="section-toggle" aria-expanded="true" aria-controls="projects"><span>YOUR PROJECTS</span><span class="chevron">⌄</span></button>
+  <nav id="projects" class="project-list" aria-label="Saved projects"></nav>
+  <div class="steps"><div class="active"><b>01</b><span>Describe your product<small>Requirements with evidence</small></span></div><div><b>02</b><span>Research & compare<small>Searches directed by Ollama</small></span></div><div><b>03</b><span>Architecture dossier<small>Tools, tradeoffs & constraints</small></span></div><div><b>04</b><span>Your build prompts<small>Ready to copy</small></span></div></div>
+  <button id="show-hubs" class="secondary" aria-expanded="false" aria-controls="hubs-section">Source library</button>
+  <div class="privacy"><span class="dot"></span> Stored on this device<p>Conversations and project notes stay local.</p></div>
+</aside>
+<main>
+  <header><div><div class="eyebrow">YOUR IDEA → YOUR BUILD PLAN</div><h1>Project workspace</h1><p>Describe the product. Ollama researches and prepares the plan.</p></div><div class="connection"><span id="status" role="status">Connecting to Ollama…</span><span class="model-label" id="model-label">Local chat model</span><button id="model" class="model-toggle" aria-labelledby="model-label model-name" aria-expanded="false" aria-controls="model-options"><span id="model-name">Finding your models…</span><span>⌄</span></button><div id="model-options" class="model-options inline-panel" aria-label="Choose a local model" hidden></div><button id="refresh" class="text-button">Refresh connection</button></div></header>
+  <nav class="page-tabs" aria-label="Workspace views"><button id="discovery-tab" class="page-tab active" aria-pressed="true">Chat</button><button id="dossier-tab" class="page-tab" aria-pressed="false" aria-controls="dossier-section">Dossier</button><button id="sources-tab" class="page-tab" aria-pressed="false" aria-expanded="false" aria-controls="hubs-section">Sources <span id="source-count" class="tab-count">40</span></button><button id="profile-toggle" class="notes-toggle" aria-expanded="true" aria-controls="profile-panel">Project notes <span id="notes-count">0/10</span></button></nav>
+  <div id="error" role="alert" hidden></div>
+  <section id="discovery-section" class="workspace" aria-label="Project discovery">
+    <div class="chat-panel"><div class="chat-heading"><div class="project-heading"><span id="project-name">Untitled project</span></div><span class="badge">Software architect</span></div><div id="messages" aria-live="polite"></div><form id="chat-form"><label class="sr-only" for="message">Describe your product or refine its requirements</label><textarea id="message" placeholder="Describe your product, features and constraints…" rows="3" maxlength="12000" required></textarea><label class="research-toggle"><input id="research-online" type="checkbox" checked> Search public sources <small>Public search categories leave this device; your conversation stays local.</small></label><div class="composer-footer"><span id="waiting">Ctrl + Enter to send</span><button id="send" class="primary" type="submit">Send message ↑</button></div></form></div>
+    <aside id="profile-panel" class="profile-panel"><div class="eyebrow">PROJECT NOTES</div><h2>Requirements</h2><p class="muted">Collected from your messages. Correct any detail in the conversation.</p><div class="progress"><div id="progress-bar"></div></div><p id="progress-text" class="muted">0 of 10 areas covered</p><div id="profile"></div><button id="export" class="secondary">Export notes</button><p class="muted small">A detailed product description creates the dossier automatically.</p></aside>
+  </section>
+  <section id="dossier-section" class="dossier-panel" aria-labelledby="dossier-title" hidden>
+    <div class="sources-heading"><div><div class="eyebrow">PROJECT ARCHITECTURE</div><h2 id="dossier-title">Your build dossier</h2><p id="dossier-subtitle">Describe your product in the chat to start.</p></div><div class="dossier-actions"><button id="export-dossier" class="secondary" disabled>Export dossier</button><button id="refine-dossier" class="secondary">Refine in chat</button></div></div>
+    <div id="dossier-content"></div>
+  </section>
+  <section id="hubs-section" class="sources-panel" aria-labelledby="sources-title" hidden>
+    <div class="sources-heading"><div><div class="eyebrow">REFERENCE LIBRARY</div><h2 id="sources-title">Sources</h2><p>Active public connectors and registered sources for future releases. Opening this library does not run a search.</p></div><button id="close-hubs" class="secondary">Back to chat</button></div>
+    <label class="sr-only" for="hub-search">Find a source or category</label><input id="hub-search" class="source-search" type="search" placeholder="Find a source or category…" autocomplete="off"><p id="hub-results" class="muted" aria-live="polite"></p><div id="hubs-list" class="hub-grid"></div>
+  </section>
+</main>
+<script src="/app.js" defer></script>
+</body></html>

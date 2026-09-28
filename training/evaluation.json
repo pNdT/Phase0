@@ -1,0 +1,84 @@
+{
+  "training_examples": 128,
+  "evaluation_examples": 32,
+  "correct": 25,
+  "confusion_matrix": {
+    "software": {
+      "software": 16,
+      "outside": 0,
+      "uncertain": 0
+    },
+    "outside": {
+      "software": 7,
+      "outside": 9,
+      "uncertain": 0
+    }
+  },
+  "mistakes": [
+    {
+      "label": "outside",
+      "text": "Como cozinhar arroz soltinho?",
+      "prediction": {
+        "label": "software",
+        "margin": 0.214325,
+        "known_features": 2
+      }
+    },
+    {
+      "label": "outside",
+      "text": "Quero saber quem venceu a Copa do Mundo",
+      "prediction": {
+        "label": "software",
+        "margin": 0.285637,
+        "known_features": 4
+      }
+    },
+    {
+      "label": "outside",
+      "text": "Qual é o melhor investimento para ficar rico?",
+      "prediction": {
+        "label": "software",
+        "margin": 0.018685,
+        "known_features": 5
+      }
+    },
+    {
+      "label": "outside",
+      "text": "How do I bake sourdough bread?",
+      "prediction": {
+        "label": "software",
+        "margin": 0.986312,
+        "known_features": 5
+      }
+    },
+    {
+      "label": "outside",
+      "text": "Write a birthday greeting for my father",
+      "prediction": {
+        "label": "software",
+        "margin": 0.27711,
+        "known_features": 6
+      }
+    },
+    {
+      "label": "outside",
+      "text": "How do I treat a sore throat?",
+      "prediction": {
+        "label": "software",
+        "margin": 0.825674,
+        "known_features": 6
+      }
+    },
+    {
+      "label": "outside",
+      "text": "Explain the causes of the French revolution",
+      "prediction": {
+        "label": "software",
+        "margin": 0.086351,
+        "known_features": 5
+      }
+    }
+  ],
+  "dataset_sha256": "dd46f006877f23c64d20c069593ac58fd92461a57992371e568d0fdc610d3536",
+  "limitations": "Small authored synthetic PT/EN set. This is not real-world accuracy or a jailbreak guarantee. Scores are uncalibrated and contextual follow-ups require the policy gate."
+}

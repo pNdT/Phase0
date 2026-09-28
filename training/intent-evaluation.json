@@ -1,0 +1,354 @@
+{
+  "training_examples": 120,
+  "evaluation_examples": 40,
+  "dataset_sha256": "873c4b4b6ea9dbd3d7a45caf8280ca7d4e6c379c31fd12c8d4e8d508cad9517f",
+  "model_only": {
+    "correct": 20,
+    "abstentions": 20,
+    "confusion_matrix": {
+      "plan": {
+        "plan": 5,
+        "refine": 0,
+        "explain": 0,
+        "debug": 0,
+        "chat": 0,
+        "uncertain": 3
+      },
+      "refine": {
+        "plan": 0,
+        "refine": 6,
+        "explain": 0,
+        "debug": 0,
+        "chat": 0,
+        "uncertain": 2
+      },
+      "explain": {
+        "plan": 0,
+        "refine": 0,
+        "explain": 3,
+        "debug": 0,
+        "chat": 0,
+        "uncertain": 5
+      },
+      "debug": {
+        "plan": 0,
+        "refine": 0,
+        "explain": 0,
+        "debug": 5,
+        "chat": 0,
+        "uncertain": 3
+      },
+      "chat": {
+        "plan": 0,
+        "refine": 0,
+        "explain": 0,
+        "debug": 0,
+        "chat": 1,
+        "uncertain": 7
+      }
+    },
+    "mistakes_and_abstentions": [
+      {
+        "label": "plan",
+        "text": "Monte o plano completo das tecnologias para a ferramenta que descrevi.",
+        "has_dossier": true,
+        "prediction": {
+          "label": "uncertain",
+          "candidate": "plan",
+          "score": -6.314477,
+          "margin": 0.065875,
+          "known_features": 10
+        }
+      },
+      {
+        "label": "plan",
+        "text": "Help me build a CLI that converts subtitle formats.",
+        "prediction": {
+          "label": "uncertain",
+          "candidate": "plan",
+          "score": -6.126106,
+          "margin": 0.179729,
+          "known_features": 8
+        }
+      },
+      {
+        "label": "plan",
+        "text": "Which hosting and database should I use for this auction service?",
+        "has_dossier": true,
+        "prediction": {
+          "label": "uncertain",
+          "candidate": "plan",
+          "score": -6.423255,
+          "margin": 0.162446,
+          "known_features": 13
+        }
+      },
+      {
+        "label": "refine",
+        "text": "Substitua o chat público por mensagens privadas entre os membros.",
+        "has_dossier": true,
+        "prediction": {
+          "label": "uncertain",
+          "candidate": "explain",
+          "score": -6.000681,
+          "margin": 0.081958,
+          "known_features": 5
+        }
+      },
+      {
+        "label": "refine",
+        "text": "Não preciso mais de notificações por email.",
+        "has_dossier": true,
+        "prediction": {
+          "label": "uncertain",
+          "candidate": "refine",
+          "score": -6.192454,
+          "margin": 0.122215,
+          "known_features": 6
+        }
+      },
+      {
+        "label": "explain",
+        "text": "Compare Redis e Memcached sem trocar a arquitetura.",
+        "has_dossier": true,
+        "prediction": {
+          "label": "uncertain",
+          "candidate": "explain",
+          "score": -6.341513,
+          "margin": 0.004869,
+          "known_features": 8
+        }
+      },
+      {
+        "label": "explain",
+        "text": "Como funciona a fila de tarefas proposta no dossiê?",
+        "has_dossier": true,
+        "prediction": {
+          "label": "uncertain",
+          "candidate": "explain",
+          "score": -6.298968,
+          "margin": 0.05863,
+          "known_features": 9
+        }
+      },
+      {
+        "label": "explain",
+        "text": "O que é um índice composto no banco de dados?",
+        "prediction": {
+          "label": "uncertain",
+          "candidate": "explain",
+          "score": -6.147078,
+          "margin": 0.190859,
+          "known_features": 11
+        }
+      },
+      {
+        "label": "explain",
+        "text": "Why did you recommend a message broker for this product?",
+        "has_dossier": true,
+        "prediction": {
+          "label": "uncertain",
+          "candidate": "explain",
+          "score": -6.490507,
+          "margin": 0.095393,
+          "known_features": 14
+        }
+      },
+      {
+        "label": "explain",
+        "text": "I would like to understand what a migration changes.",
+        "prediction": {
+          "label": "uncertain",
+          "candidate": "plan",
+          "score": -6.082244,
+          "margin": 0.039312,
+          "known_features": 6
+        }
+      },
+      {
+        "label": "debug",
+        "text": "Recebi SyntaxError ao iniciar o servidor de desenvolvimento.",
+        "prediction": {
+          "label": "uncertain",
+          "candidate": "debug",
+          "score": -5.475188,
+          "margin": 0.162951,
+          "known_features": 3
+        }
+      },
+      {
+        "label": "debug",
+        "text": "Find the cause of this traceback while parsing the configuration file.",
+        "prediction": {
+          "label": "uncertain",
+          "candidate": "debug",
+          "score": -5.943397,
+          "margin": 0.170858,
+          "known_features": 7
+        }
+      },
+      {
+        "label": "debug",
+        "text": "The form saves an empty value even though the input contains text.",
+        "has_dossier": true,
+        "prediction": {
+          "label": "uncertain",
+          "candidate": "debug",
+          "score": -6.065465,
+          "margin": 0.210156,
+          "known_features": 7
+        }
+      },
+      {
+        "label": "chat",
+        "text": "Obrigado, ajudou bastante!",
+        "has_dossier": true,
+        "prediction": {
+          "label": "uncertain",
+          "candidate": "chat",
+          "score": -5.316606,
+          "margin": 0.233741,
+          "known_features": 1
+        }
+      },
+      {
+        "label": "chat",
+        "text": "Olá, estou explorando o programa.",
+        "prediction": {
+          "label": "uncertain",
+          "candidate": "chat",
+          "score": -5.837885,
+          "margin": 0.215378,
+          "known_features": 3
+        }
+      },
+      {
+        "label": "chat",
+        "text": "Vou olhar as recomendações depois do almoço.",
+        "has_dossier": true,
+        "prediction": {
+          "label": "uncertain",
+          "candidate": "explain",
+          "score": -6.250298,
+          "margin": 0.007537,
+          "known_features": 4
+        }
+      },
+      {
+        "label": "chat",
+        "text": "Ainda não decidi que tipo de projeto quero começar.",
+        "prediction": {
+          "label": "uncertain",
+          "candidate": "plan",
+          "score": -6.23608,
+          "margin": 0.176873,
+          "known_features": 7
+        }
+      },
+      {
+        "label": "chat",
+        "text": "Thanks, that answers my question.",
+        "has_dossier": true,
+        "prediction": {
+          "label": "uncertain",
+          "candidate": "debug",
+          "score": -5.995726,
+          "margin": 0.035175,
+          "known_features": 3
+        }
+      },
+      {
+        "label": "chat",
+        "text": "Good morning, I have never used this assistant.",
+        "prediction": {
+          "label": "uncertain",
+          "candidate": "chat",
+          "score": -5.678183,
+          "margin": 0.184814,
+          "known_features": 3
+        }
+      },
+      {
+        "label": "chat",
+        "text": "I will come back when I have a clearer idea.",
+        "prediction": {
+          "label": "uncertain",
+          "candidate": "chat",
+          "score": -5.902335,
+          "margin": 0.138547,
+          "known_features": 6
+        }
+      }
+    ]
+  },
+  "rules_plus_model": {
+    "correct": 38,
+    "confusion_matrix": {
+      "plan": {
+        "plan": 8,
+        "refine": 0,
+        "explain": 0,
+        "debug": 0,
+        "chat": 0
+      },
+      "refine": {
+        "plan": 0,
+        "refine": 8,
+        "explain": 0,
+        "debug": 0,
+        "chat": 0
+      },
+      "explain": {
+        "plan": 0,
+        "refine": 0,
+        "explain": 7,
+        "debug": 0,
+        "chat": 1
+      },
+      "debug": {
+        "plan": 0,
+        "refine": 0,
+        "explain": 0,
+        "debug": 7,
+        "chat": 1
+      },
+      "chat": {
+        "plan": 0,
+        "refine": 0,
+        "explain": 0,
+        "debug": 0,
+        "chat": 8
+      }
+    },
+    "mistakes": [
+      {
+        "label": "explain",
+        "text": "I would like to understand what a migration changes.",
+        "route": {
+          "intent": "chat",
+          "source": "fallback:uncertain",
+          "score": -6.082244,
+          "margin": 0.039312
+        }
+      },
+      {
+        "label": "debug",
+        "text": "The form saves an empty value even though the input contains text.",
+        "has_dossier": true,
+        "route": {
+          "intent": "chat",
+          "source": "fallback:uncertain",
+          "score": -6.065465,
+          "margin": 0.210156
+        }
+      }
+    ]
+  },
+  "limitations": [
+    "Small authored synthetic PT/EN holdout; not a measured real-world success rate.",
+    "Uncalibrated log-likelihood margins; low-confidence model predictions abstain.",
+    "Routes request intent only. It does not judge source relevance, facts, or final answer quality.",
+    "This trains a small local classifier, not Ollama, Laya, or a generative language model.",
+    "Existing quality-evaluation conversations are regression checks, not training examples."
+  ]
+}
