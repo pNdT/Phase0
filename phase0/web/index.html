@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="phase0-token" content="__SESSION_TOKEN__">
+  <meta name="phase0-token" content="__SESSION_TOKEN__"><meta name="phase0-deployment" content="__DEPLOYMENT__">
   <title>Phase 0 · Your idea, made buildable</title><link rel="stylesheet" href="/style.css">
 </head>
 <body>
@@ -19,7 +19,7 @@
   <nav id="projects" class="project-list" aria-label="Saved projects"></nav>
   <div class="steps"><div class="active"><b>01</b><span>Describe your product<small>Requirements with evidence</small></span></div><div><b>02</b><span>Research & compare<small>Searches directed by Ollama</small></span></div><div><b>03</b><span>Architecture dossier<small>Tools, tradeoffs & constraints</small></span></div><div><b>04</b><span>Your build prompts<small>Ready to copy</small></span></div></div>
   <button id="show-hubs" class="secondary" aria-expanded="false" aria-controls="hubs-section">Source library</button>
-  <div class="privacy"><span class="dot"></span> Stored on this device<p>Conversations and project notes stay local.</p></div>
+  <div class="privacy"><span class="dot"></span> <span id="privacy-title">Stored on this device</span><p id="privacy-text">Conversations and project notes stay local.</p><button id="logout" class="text-button" type="button" hidden>Sign out</button></div>
 </aside>
 <main>
   <header><div><div class="eyebrow">YOUR IDEA → YOUR BUILD PLAN</div><h1>Project workspace</h1><p>Describe the product. Ollama researches and prepares the plan.</p></div><div class="connection"><span id="status" role="status">Connecting to Ollama…</span><span class="model-label" id="model-label">Local chat model</span><button id="model" class="model-toggle" aria-labelledby="model-label model-name" aria-expanded="false" aria-controls="model-options"><span id="model-name">Finding your models…</span><span>⌄</span></button><div id="model-options" class="model-options inline-panel" aria-label="Choose a local model" hidden></div><button id="refresh" class="text-button">Refresh connection</button></div></header>

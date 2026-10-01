@@ -39,6 +39,10 @@ O dossiê mostra o produto entendido e requisitos confirmados, uma trilha das pe
 
 O Python aplica restrições essenciais de plataforma, offline, contas, banco de dados e ferramentas obrigatórias antes de oferecer candidatos ao Ollama. O catálogo inicial contém **25 ferramentas** e **nove combinações de stack**. Os **40 hubs** fornecidos estão registrados; **sete entradas** têm conectores públicos ativos. Estar na aba Sources não significa que o hub inteiro é pesquisável. Veja o [contrato de pesquisa implementado](docs/RESEARCH.md).
 
+## Acessar de qualquer lugar (Vercel)
+
+Para usar o Phase 0 fora de casa sem deixar o computador ligado, publique-o na Vercel: o app roda na nuvem com **senha**, guarda os projetos num Postgres gerenciado (Neon ou Supabase) e usa um modelo na nuvem (Groq por padrão) no lugar do Ollama. Nesse modo, a descrição e o histórico do projeto são enviados ao provedor do modelo. Veja o [passo a passo](docs/DEPLOY-VERCEL.md).
+
 ## Dados locais e pesquisa pública
 
 O servidor escuta apenas em `127.0.0.1`, acessa o Ollama em `http://127.0.0.1:11434` e salva conversas, notas e dossiês no SQLite em `data/phase0.sqlite3`. O banco **não é criptografado em repouso**. Não há conta Phase 0, analytics, CDN ou chave de API obrigatória para o aplicativo.
@@ -125,6 +129,10 @@ The **Search public sources** checkbox defaults on. Turn it off for local catalo
 Only the initial catalog combinations are supported. An incompatible request produces a blocked dossier instead of a fabricated stack. Search categories now distinguish ASR transcription, B3 stocks, cryptocurrency quotes, CLI file processing and bookings; they remain predefined public categories rather than unrestricted private queries. Source failures, empty searches and invalid selections are visible. Directory listings, repository descriptions and model metadata are discovery evidence, not proof of production fitness, complete documentation review or API eligibility.
 
 Monthly totals, paid tier projections, payment country eligibility, Pix routing and commercial-model benchmarks are not implemented. Costs remain explicitly unverified. Payment entries are conditional options rather than a final checkout pipeline. Prompts are contextual templates, not proof that an external coding tool can build the product correctly. Laya, embeddings/vector RAG, broader connectors and complete deployment analysis remain on the roadmap. The prototype is not an absolute zero-hallucination or zero-drift guarantee.
+
+## Cloud deployment
+
+`phase0.wsgi:app` runs the same application on Vercel behind a password session (signed `HttpOnly` cookie plus CSRF token), stores projects in Postgres (`DATABASE_URL`) and calls an OpenAI-compatible provider (`LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODELS`). Product descriptions and history are then sent to that provider. See [docs/DEPLOY-VERCEL.md](docs/DEPLOY-VERCEL.md). The local server below is unchanged.
 
 ## Privacy and security
 

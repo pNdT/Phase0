@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Phase 0 · Sign in</title><link rel="stylesheet" href="/style.css">
+</head>
+<body class="login-page">
+<main class="login-card">
+  <a class="brand" href="/"><span>phase<span class="accent">0</span></span><span class="brand-label">Project planning</span></a>
+  <h1>Sign in</h1>
+  <p class="muted">This Phase 0 is private. Enter the password configured on the server.</p>
+  <form id="login-form">
+    <label for="password">Password</label>
+    <input id="password" type="password" autocomplete="current-password" required autofocus>
+    <div id="error" role="alert" hidden></div>
+    <button id="login-button" class="primary" type="submit">Sign in</button>
+  </form>
+</main>
+<script src="/login.js" defer></script>
+</body></html>

@@ -6,8 +6,7 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from contextlib import contextmanager
-from urllib.error import URLError
-from urllib.request import Request, urlopen
+from . import llm
 from . import scope
 from . import planner, research
 from .conversation import route_intent, normalize
@@ -25,7 +24,7 @@ FIELDS = {
     "privacy": "Sensitive data, offline requirements, and external-service restrictions.",
     "integrations": "Required APIs, AI features, payments, and existing systems.",
 }
-OLLAMA = "http://127.0.0.1:11434"
+OLLAMA = llm.OLLAMA
 
 
 class AppError(Exception):
@@ -41,21 +40,18 @@ def blank_profile():
 
 
 def ollama_request(path, payload=None, timeout=10):
-    data = None if payload is None else json.dumps(payload).encode()
-    request = Request(OLLAMA + path, data=data, headers={"Content-Type": "application/json"})
+    """Ollama-dialect request; llm translates it when a cloud provider is configured."""
     try:
-        with urlopen(request, timeout=timeout) as response:
-            return json.load(response)
-    except (URLError, TimeoutError, OSError, ValueError) as exc:
-        raise AppError("Could not reach local Ollama. Start Ollama and retry. No message was saved.") from exc
+        return llm.request(path, payload, timeout)
+    except llm.ProviderError as exc:
+        raise AppError(str(exc)) from exc
 
 
 def local_models():
-    result = ollama_request("/api/tags")
-    return [m["name"] for m in result.get("models", [])
-            if not m.get("remote_model") and not m.get("remote_host")
-            and not m.get("name", "").endswith(":cloud")
-            and (not m.get("capabilities") or "completion" in m["capabilities"])]
+    try:
+        return llm.models()
+    except llm.ProviderError as exc:
+        raise AppError(str(exc)) from exc
 
 
 def response_schema():
@@ -120,12 +116,39 @@ def validate_response(raw, user_text):
         raise AppError("The local model returned an invalid discovery response. Retry or choose another model. No message was saved.") from exc
 
 
+class PostgresConnection:
+    """Gives a psycopg connection the small sqlite3 surface the Store uses."""
+
+    def __init__(self, connection):
+        self.connection = connection
+
+    def execute(self, sql, params=()):
+        return self.connection.execute(sql.replace("?", "%s"), params)
+
+    def executemany(self, sql, rows):
+        with self.connection.cursor() as cursor:
+            cursor.executemany(sql.replace("?", "%s"), rows)
+
+
 class Store:
-    def __init__(self, path):
-        self.path = Path(path)
-        self.path.parent.mkdir(parents=True, exist_ok=True)
+    LEASE_SECONDS = 330  # Longer than the 300 s cloud function limit, so a crashed turn frees itself.
+
+    def __init__(self, path=None, database_url=None):
+        self.database_url = database_url
         self.locks = {}
         self.lock_guard = threading.Lock()
+        if database_url:
+            self.path = None
+            with self.connect() as db:
+                db.execute("CREATE TABLE IF NOT EXISTS projects (id TEXT PRIMARY KEY, name TEXT NOT NULL, created TEXT NOT NULL, "
+                           "profile TEXT NOT NULL, dossier TEXT, busy_until TIMESTAMPTZ)")
+                db.execute("CREATE TABLE IF NOT EXISTS messages (id BIGSERIAL PRIMARY KEY, "
+                           "project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE, role TEXT NOT NULL, "
+                           "content TEXT NOT NULL, created TEXT NOT NULL, scope TEXT NOT NULL DEFAULT 'legacy')")
+                db.execute("CREATE INDEX IF NOT EXISTS messages_project_id ON messages (project_id, id)")
+            return
+        self.path = Path(path)
+        self.path.parent.mkdir(parents=True, exist_ok=True)
         with self.connect() as db:
             db.execute("PRAGMA journal_mode=WAL")
             db.execute("CREATE TABLE IF NOT EXISTS projects (id TEXT PRIMARY KEY, name TEXT NOT NULL, created TEXT NOT NULL, profile TEXT NOT NULL)")
@@ -137,6 +160,14 @@ class Store:
 
     @contextmanager
     def connect(self):
+        if self.database_url:
+            import psycopg  # Only needed in the cloud; the local app stays standard-library only.
+            from psycopg.rows import dict_row
+            # prepare_threshold=None keeps transaction poolers (Supabase 6543, Neon pooler) working.
+            with psycopg.connect(self.database_url, row_factory=dict_row, prepare_threshold=None,
+                                 connect_timeout=10) as connection:
+                yield PostgresConnection(connection)
+            return
         db = sqlite3.connect(self.path)
         db.row_factory = sqlite3.Row
         try:
@@ -144,6 +175,28 @@ class Store:
                 yield db
         finally:
             db.close()
+
+    def acquire(self, identifier):
+        """One response per project at a time, across server instances when on Postgres."""
+        if not self.database_url:
+            with self.lock_guard:
+                lock = self.locks.setdefault(identifier, threading.Lock())
+            return lock.acquire(blocking=False)
+        with self.connect() as db:
+            cursor = db.execute("UPDATE projects SET busy_until = now() + make_interval(secs => ?) "
+                                "WHERE id=? AND (busy_until IS NULL OR busy_until < now())",
+                                (self.LEASE_SECONDS, identifier))
+            acquired = cursor.rowcount == 1
+        if not acquired:
+            self.get(identifier)  # Raises "Project not found." before reporting a busy project.
+        return acquired
+
+    def release(self, identifier):
+        if not self.database_url:
+            self.locks[identifier].release()
+            return
+        with self.connect() as db:
+            db.execute("UPDATE projects SET busy_until=NULL WHERE id=?", (identifier,))
 
     def create(self, name):
         identifier = str(uuid.uuid4())
@@ -162,6 +215,7 @@ class Store:
             if row is None:
                 raise AppError("Project not found.")
             project = dict(row)
+            project.pop("busy_until", None)
             project["profile"] = json.loads(project["profile"])
             project['dossier'] = json.loads(project['dossier']) if project['dossier'] else None
             project["messages"] = [dict(row) for row in db.execute(
@@ -186,9 +240,7 @@ class Store:
             raise AppError("Enter a message between 1 and 12,000 characters.")
         if not isinstance(research_online,bool):
             raise AppError('Invalid research mode.')
-        with self.lock_guard:
-            lock = self.locks.setdefault(identifier, threading.Lock())
-        if not lock.acquire(blocking=False):
+        if not self.acquire(identifier):
             raise AppError("This project already has a response in progress.")
         try:
             project = self.get(identifier)
@@ -196,7 +248,8 @@ class Store:
             if decision:
                 return self.save_turn(project, text, scope.fixed_reply(decision, text, project), decision)
             if model not in local_models():
-                raise AppError("Choose an installed local chat model. Cloud models are not supported.")
+                raise AppError("Choose an installed local chat model. Cloud models are not supported."
+                               if llm.is_local() else "Choose one of the models configured on the server.")
             decision = scope.input_decision(text, project, model, ollama_request)
             if decision != 'allow':
                 return self.save_turn(project, text, scope.fixed_reply(decision, text, project), decision)
@@ -386,4 +439,4 @@ class Store:
             result['intent'] = intent
             return result
         finally:
-            lock.release()
+            self.release(identifier)

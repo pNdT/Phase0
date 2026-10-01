@@ -1,0 +1,10 @@
+[project]
+name = "phase0"
+version = "0.1.0"
+description = "Software architecture planner for vibecoding"
+requires-python = ">=3.10"
+# Only the cloud deployment needs this; the local app runs on the standard library.
+dependencies = ["psycopg[binary]>=3.2,<4"]
+
+[tool.vercel]
+entrypoint = "phase0.wsgi:app"

@@ -1,0 +1,6 @@
+data/
+tests/
+training/
+docs/
+.venv/
+*.sqlite3*

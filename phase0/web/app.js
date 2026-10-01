@@ -1,5 +1,7 @@
 const $ = id => document.getElementById(id);
 const token = document.querySelector('meta[name="phase0-token"]').content;
+const cloud = document.querySelector('meta[name="phase0-deployment"]')?.content === 'cloud';
+let engine = 'Ollama';
 const labels = {product:'Product & audience',platform:'Platform',features:'First-version features',budget:'Budget',geography:'Business & user geography',monetization:'Monetization',technical_comfort:'Technical comfort',scale:'Expected usage',privacy:'Privacy & deployment',integrations:'Integrations & AI'};
 let project = null, busy = false, selectedModel = '', models = [], projects = [], hubs = null, toolCatalog = {}, currentView = 'chat';
 let notesManuallySet = false;
@@ -10,6 +12,7 @@ function showNotes(open) {
 }
 async function api(path, body) {
   const response = await fetch(path, {method: body === undefined ? 'GET' : 'POST', headers: {'X-Phase0-Token':token,'Content-Type':'application/json'}, ...(body === undefined ? {} : {body:JSON.stringify(body)})});
+  if (response.status === 401 && cloud) { window.location.replace('/'); throw new Error('Sign in again to continue.'); }
   const result = await response.json();
   if (!response.ok) throw new Error(result.error || 'Request failed.');
   return result;
@@ -21,7 +24,7 @@ function setBusy(value) {
   busy=value;
   ['send','message','new-project','model','refresh','create-button','project-title','research-online'].forEach(id=>$(id).disabled=value);
   document.querySelectorAll('.project-choice,.model-choice').forEach(button=>button.disabled=value);
-  $('waiting').textContent=value?'Ollama: understanding, researching and comparing… this may take a few minutes.':'Ctrl + Enter to send';
+  $('waiting').textContent=value?engine+': understanding, researching and comparing… this may take a few minutes.':'Ctrl + Enter to send';
   $('send').textContent=value?'Processing…':'Send message ↑';
 }
 function render() {
@@ -30,7 +33,7 @@ function render() {
   const messages=project?.messages || [];
   if(!messages.length) {
     const welcome=element('div','welcome');
-    welcome.append(element('span','welcome-kicker','SOFTWARE & VIBECODING'),element('h2','','What are you building?'),element('p','','Describe your product, features and constraints. Ollama will choose public searches, compare compatible tools and prepare a dossier with a stack, sources and build prompts. Unknown requirements stay explicit.'));
+    welcome.append(element('span','welcome-kicker','SOFTWARE & VIBECODING'),element('h2','','What are you building?'),element('p','','Describe your product, features and constraints. '+engine+' will choose public searches, compare compatible tools and prepare a dossier with a stack, sources and build prompts. Unknown requirements stay explicit.'));
     const tips=element('div','idea-tips');['Purpose','Audience','Budget & constraints'].forEach(tip=>tips.append(element('span','',tip)));welcome.append(tips);$('messages').append(welcome);
   }
   messages.forEach(m=>{const node=element('article','message '+m.role);node.append(element('div','message-role',m.role==='user'?'YOU':'PHASE 0'),element('p','',m.content));$('messages').append(node);});
@@ -49,14 +52,20 @@ function renderProjects() {
 }
 async function refreshProjects(){projects=await api('/api/projects');renderProjects();}
 function renderModels() {
-  $('model-name').textContent=selectedModel || 'No local model found';
+  $('model-name').textContent=selectedModel || (cloud?'No model configured':'No local model found');
   $('model-options').replaceChildren();
-  if(!models.length)$('model-options').append(element('p','muted','Start Ollama and install a chat model, then refresh.'));
+  if(!models.length)$('model-options').append(element('p','muted',cloud?'Set LLM_MODELS on the server, then refresh.':'Start Ollama and install a chat model, then refresh.'));
   models.forEach(name=>{const button=element('button','model-choice',name);button.type='button';button.disabled=busy;button.setAttribute('aria-pressed',String(name===selectedModel));button.onclick=()=>{selectedModel=name;renderModels();disclosure('model','model-options',false);$('model').focus();};$('model-options').append(button);});
 }
 async function connection() {
-  const status=await api('/api/status');models=status.models;
+  const status=await api('/api/status');models=status.models;engine=status.provider_label||'Ollama';
   if(!models.includes(selectedModel))selectedModel=models[0] || '';
+  if(status.local===false){
+    $('status').textContent=status.ollama==='ready'?(models.length?'● '+engine+' connected':'○ No model configured'):'○ '+engine+' is unreachable';
+    renderModels();
+    if(status.ollama!=='ready')error(status.error||'The model provider is unreachable. Refresh to retry.');else if(!models.length)error('Set LLM_MODELS on the server, then refresh.');else error('');
+    return;
+  }
   $('status').textContent=status.ollama==='ready'?(models.length?'● Ollama connected':'○ Install a local chat model'):'○ Ollama is offline';
   renderModels();
   if(status.ollama!=='ready')error('Start Ollama, then refresh the connection.');else if(!models.length)error('Install a local chat model with Ollama, then refresh.');else error('');
@@ -93,7 +102,7 @@ $('profile-toggle').onclick=()=>{notesManuallySet=true;showNotes($('profile-pane
 compactLayout.addEventListener('change',event=>{if(!notesManuallySet)showNotes(!event.matches);});
 $('model').onclick=()=>disclosure('model','model-options',$('model-options').hidden);
 $('refresh').onclick=()=>connection().catch(e=>error(e.message));
-$('chat-form').onsubmit=async event=>{event.preventDefault();if(busy)return;const message=$('message').value.trim();if(!message)return;if(!selectedModel){error('Connect Ollama and choose a local model first.');return;}disclosure('model','model-options',false);setBusy(true);error('');try{if(!project){project=await api('/api/projects',{name:message.slice(0,60)});await refreshProjects();}const previous=project.dossier?.created_at;project=await api(`/api/projects/${project.id}/chat`,{message,model:selectedModel,research_online:$('research-online').checked});$('message').value='';render();if(project.dossier && project.dossier.created_at!==previous){showView('dossier');$('dossier-title').setAttribute('tabindex','-1');$('dossier-title').focus();}if(project.rejected_updates?.length)error('Could not validate updates for: '+project.rejected_updates.map(key=>labels[key]||key).join(', ')+'. Previous notes were kept; review the source quotes.');}catch(e){error(e.message);}finally{setBusy(false);if(currentView==='chat')$('message').focus();}};
+$('chat-form').onsubmit=async event=>{event.preventDefault();if(busy)return;const message=$('message').value.trim();if(!message)return;if(!selectedModel){error(cloud?'Choose a model first.':'Connect Ollama and choose a local model first.');return;}disclosure('model','model-options',false);setBusy(true);error('');try{if(!project){project=await api('/api/projects',{name:message.slice(0,60)});await refreshProjects();}const previous=project.dossier?.created_at;project=await api(`/api/projects/${project.id}/chat`,{message,model:selectedModel,research_online:$('research-online').checked});$('message').value='';render();if(project.dossier && project.dossier.created_at!==previous){showView('dossier');$('dossier-title').setAttribute('tabindex','-1');$('dossier-title').focus();}if(project.rejected_updates?.length)error('Could not validate updates for: '+project.rejected_updates.map(key=>labels[key]||key).join(', ')+'. Previous notes were kept; review the source quotes.');}catch(e){error(e.message);}finally{setBusy(false);if(currentView==='chat')$('message').focus();}};
 $('send').onclick=event=>{event.preventDefault();$('chat-form').requestSubmit();};
 $('message').onkeydown=event=>{if(event.key==='Enter'&&(event.ctrlKey||event.metaKey)){event.preventDefault();$('chat-form').requestSubmit();}};
 $('export').onclick=()=>{if(!project)return;const content={schema_version:1,stage:'discovery',exported_at:new Date().toISOString(),project};const url=URL.createObjectURL(new Blob([JSON.stringify(content,null,2)],{type:'application/json'}));const link=element('a');link.href=url;link.download='phase0-discovery.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
@@ -117,14 +126,14 @@ function renderDossier(){
   const facts=Object.entries(d.requirements).filter(([,v])=>v.value).map(([k,v])=>labels[k]+': '+v.value);brief.append(listItems(facts));overview.append(brief);
   if(d.assumptions.length)overview.append(element('h4','',tr('Hipóteses usadas','Working assumptions')),listItems(d.assumptions));
   const live=d.live_research||{},tasks=live.tasks||[],recommendations=live.recommendations||[];
-  const research=dossierSection(tr('Pesquisa conduzida pelo Ollama','Research directed by Ollama'));
+  const research=dossierSection(tr('Pesquisa conduzida pelo '+engine,'Research directed by '+engine));
   research.append(element('p','muted',tr('Modelo: ','Model: ')+(live.model||selectedModel)+' · '+(live.mode||'offline')+' · '+(live.status||'not-run')));
   if(!tasks.length)research.append(element('p','',tr('Nenhuma consulta pública foi executada nesta rodada. A proposta usa a base local.','No public queries were executed this turn. The proposal uses the local catalog.')));
   const traces=element('div','research-traces');tasks.forEach(t=>{const row=element('article','research-trace');row.append(element('strong','',t.source+' · '+t.query),element('span','trace-status',t.status==='ok'?tr('Resultados: ','Results: ')+t.result_count:t.status),element('p','muted',t.tool_id||t.topic));if(t.error)row.append(element('p','muted',t.error));traces.append(row);});research.append(traces);
   if(recommendations.length){const found=element('div','dossier-grid');recommendations.forEach(r=>{const card=element('article','tool-card');card.append(sourceLink(r.name,r.url),element('p','',r.reason),element('blockquote','',r.evidence),element('p','muted',tr('Licença: ','License: ')+r.license));found.append(card);});research.append(found);}else if(tasks.length)research.append(element('p','muted',tr('Nenhum recurso retornado passou pela seleção com evidência nesta rodada. Isso não significa que não existam opções.','No returned resource passed evidence-backed selection this turn. This does not mean options do not exist.')));
   if(live.selection_status)research.append(element('p','muted',live.selection_status));
   const raw=element('details','dossier-details');raw.append(element('summary','',tr('Ver todos os resultados recebidos','View all fetched results')));(live.results||[]).forEach(r=>raw.append(sourceLink(r.name,r.url),element('p','muted',r.description)));research.append(raw);
-  research.append(element('p','muted',tr('Consultas limitadas a categorias públicas. A descrição e o histórico são processados no Ollama local. Popularidade e estrelas não comprovam adequação.','Queries use bounded public categories. Product descriptions and history are processed in local Ollama. Popularity and stars do not establish suitability.')));
+  research.append(element('p','muted',(cloud?tr('Consultas limitadas a categorias públicas. A descrição e o histórico são enviados ao provedor de modelo configurado. Popularidade e estrelas não comprovam adequação.','Queries use bounded public categories. Product descriptions and history are sent to the configured model provider. Popularity and stars do not establish suitability.'):tr('Consultas limitadas a categorias públicas. A descrição e o histórico são processados no Ollama local. Popularidade e estrelas não comprovam adequação.','Queries use bounded public categories. Product descriptions and history are processed in local Ollama. Popularity and stars do not establish suitability.'))));
   const stack=dossierSection(tr('Stack recomendada para começar','Recommended starting stack'));
   stack.append(element('p','',d.decision.reason),element('p','muted',tr('Decisão: ','Decision: ')+d.decision.driver));
   function toolCards(section,tools){const grid=element('div','dossier-grid');tools.forEach(t=>{const card=element('article','tool-card');card.append(element('span','hub-category',t.role),element('h4','',t.name),element('p','',t[pt?'evidence':'evidence_en']),element('p','tool-limit',t[pt?'limitations':'limitations_en']),element('p','muted',t[pt?'cost':'cost_en']),sourceLink(tr('Documentação','Documentation'),t.source));if(t.pricing_source)card.append(sourceLink(tr('Preços para verificar','Pricing to verify'),t.pricing_source));grid.append(card);});section.append(grid);}
@@ -139,6 +148,14 @@ function renderDossier(){
   const prompts=dossierSection(tr('Prompts para começar a construir','Prompts to start building'));
   d.prompts.forEach((p,i)=>{const card=element('article','prompt-card');const heading=element('div','prompt-heading');const copy=element('button','secondary',tr('Copiar prompt ','Copy prompt ')+(i+1));copy.type='button';heading.append(element('h4','',p.title),copy);const area=element('textarea','prompt-text');area.value=p.text;area.readOnly=true;area.rows=6;area.setAttribute('aria-label',p.title);const status=element('span','muted');status.setAttribute('role','status');copy.onclick=async()=>{try{await navigator.clipboard.writeText(p.text);status.textContent=tr('Copiado.','Copied.');}catch{area.focus();area.select();status.textContent=tr('Texto selecionado. Use Ctrl+C.','Text selected. Press Ctrl+C.');}};card.append(heading,area,status);prompts.append(card);});
   const provenance=dossierSection(tr('Base local usada','Local catalog used'));provenance.append(element('p','muted',tr('Catálogo inicial: ','Initial catalog: ')+d.research.tools_considered+tr(' ferramentas; ',' tools; ')+d.research.stacks_compared+tr(' combinações avaliadas. Revisão: ',' combinations evaluated. Reviewed: ')+d.research.reviewed_at+tr('. Registros do catálogo são referências; somente as consultas acima representam pesquisa desta rodada.','. Catalog entries are references; only the queries above represent research in this turn.')));
+}
+if(cloud){
+  $('model-label').textContent='Model';$('status').textContent='Connecting to the model provider…';
+  document.querySelector('header p').textContent='Describe the product. The configured model researches and prepares the plan.';
+  document.querySelector('.research-toggle small').textContent='Public search categories are queried from the server.';
+  $('privacy-title').textContent='Private cloud workspace';
+  $('privacy-text').textContent='Projects are saved in your database. Messages are sent to the configured model provider.';
+  $('logout').hidden=false;$('logout').onclick=async()=>{try{await api('/api/logout',{});}catch{}window.location.replace('/');};
 }
 async function init(){showNotes(!compactLayout.matches);render();try{await connection();await refreshProjects();const catalog=await api('/api/catalog');toolCatalog=Object.fromEntries(catalog.tools.map(t=>[t.id,t]));if(projects.length){project=await api('/api/projects/'+projects[0].id);render();}}catch(e){error(e.message);}}
 init();
